@@ -1,0 +1,71 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{geometry} % for making easy changes to page layout
+\geometry{body={15cm,24cm}} % change height and width of main text
+
+\usepackage{parskip} % for blank lines between paragraphs 
+
+\usepackage{amsmath,amssymb} % for serious mathematics, such as \begin{align*} etc
+
+\usepackage{graphicx} % for \includegraphics{} etc
+
+\title{Example document}
+\author{Neil Laws}
+\date{31 September 2022}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+This is an example Latex document.
+
+\subsection{Maths and equations}
+
+Mathematical symbols are possible, such as $x$, $y$ and $\alpha$.
+
+Including an equation inline is possible, such as $\widehat{\beta} = (X^T X)^{-1}X^T y$.
+
+Also displayed equations:
+\begin{equation}
+	y = X\beta + \epsilon.
+\end{equation}
+
+And aligned displays:
+\begin{align*}
+	p &= P(|Z| \geq z_0)\\
+	  &= 2(1 - \Phi(z_0)).
+\end{align*}
+
+\subsection{Figures}
+
+It is also possible to include figures.
+
+
+
+The R code that generated \texttt{cars.pdf} was:
+\begin{verbatim}
+pdf("cars.pdf", width = 5, height = 5)
+plot(dist ~ speed, data = cars,
+     xlab = "Speed (mph)", ylab = "Stopping Distance (ft)")
+dev.off()
+\end{verbatim}
+
+In this example the files \texttt{example.tex} and \texttt{cars.pdf} need to be in the same folder -- so that when Latex is run on the file \texttt{example.tex}, the included file \texttt{cars.pdf} is found.
+
+Don't specify a different aspect ratio in Latex to that used when generating the figure. Here's an example of what can happen:
+
+
+
+\section{Another section}
+
+If you specify just one of \texttt{height} and \texttt{width}, the aspect ratio will not change:
+
+\includegraphics{../plots/plot.pdf}
+
+
+
+
+
+\end{document}
