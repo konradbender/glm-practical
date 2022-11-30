@@ -4,69 +4,67 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(gridExtra)
+library(knitr)
 
-FONT_SIZE <- 12
+options(digits=3)
+
+FONT_SIZE <- 7
+DOUBLE_FONT_SIZE <- 8
+
+WIDTH <- 4
+DOUBLE_WIDTH <- 6
+DOUBLE_HEIGHT <- 5
+HEIGHT <- 3
 
 data <- get_eda_data()
 head(data)
 
 df <- data
-# a lot of respondents did not go to the doctor in the previous
-# two weeks at all.
+
+# Make a histogram of all the reponses together
 ggplot(df) + geom_histogram(aes(visits)) +
+  geom_vline(xintercept = mean(df$visits)) +
+  ggtitle(paste("Number of doctor visists across all individuals | Mean =",
+                round(mean(df$visits),3))) +
   theme(text = element_text(size=FONT_SIZE))
-ggsave("plots/histogram_of_visits.pdf")
-
-
-
-# group data by income and insurance
-# we see that with reduced income, the mean number of doctor visits increases
-df.grouped <- df %>% group_by(income, insurance) %>%
-  summarise(n(), max(visits), min(visits), mn = mean(visits))
-ggplot(df.grouped, aes(income, mn, color=insurance)) + geom_point()
-ggsave("plots/mean_vs_income_and_private.pdf")
-
-df.grouped <- df %>% group_by(age, insurance) %>%
-  summarise(n(), max(visits), min(visits), mn = mean(visits))
-ggplot(df.grouped, aes(age, mn, color=insurance)) + geom_point()
-ggsave("plots/mean_vs_age_and_insurance.pdf")
+ggsave("plots/histogram_of_visits.pdf", width = WIDTH, height = HEIGHT)
 
 # group data by income only
 # we see that with reduced income, the mean number of doctor visits increases
-
 df.grouped <- df %>% group_by(income) %>%
   summarise(n(), max(visits), min(visits), mn = mean(visits))
 p1 <- ggplot(df.grouped, aes(income, mn)) + geom_point()
-p1 <- p1 + ggtitle("Mean doctor visists as a function of income")
-p1 <- p1 + theme(text = element_text(size=FONT_SIZE))
-ggsave("plots/mean_vs_age.pdf")
+p1 <- p1 + ggtitle("Mean visists as a function of income")
+p1 <- p1 + theme(text = element_text(size=DOUBLE_FONT_SIZE))
 
 # group data by age only
-# we see that with reduced income, the mean number of doctor visits increases
+# we see that with increased age, the mean number of doctor visits increases
 df.grouped <- df %>% group_by(age) %>%
   summarise(n(), max(visits), min(visits), mn = mean(visits))
 p2 <- ggplot(df.grouped, aes(age, mn)) + geom_point()
 p2 <- p2 + ggtitle("Mean doctor visists as a function of age")
-p2 <- p2 + theme(text = element_text(size=FONT_SIZE))
-ggsave("plots/mean_vs_age.pdf")
+p2 <- p2 + theme(text = element_text(size=DOUBLE_FONT_SIZE))
 
 ggsave("plots/mean_vs_income_and_age.pdf", arrangeGrob(p1, p2, nrow = 1, ncol = 2),
-       width =  15, height = 10)
+        width = DOUBLE_WIDTH, height = HEIGHT)
 
 # let's make a histogram how the type of insurance influences how often you go
-means <- df %>% group_by(insurance) %>% summarise(mn = mean(visits))
+# mean number of visits for different insurance types
+ins.means <- df %>% group_by(insurance) %>% summarise(mn = mean(visits))
 labels <- list()
-for (value in means$insurance){
-  mean <- means[means$insurance == value, "mn"]
-  label <- paste("Insurance:", value, "| Mean =", round(mean, 4))
+for (value in ins.means$insurance){
+  m <- ins.means[ins.means$insurance == value, "mn"]
+  label <- paste("Insurance:", value, "| Mean =", round(m, 4))
   labels[value] <- label
 }
+# now make a histogram divided by insurance type
 p <- ggplot(df, aes(visits)) + geom_histogram() +
   facet_wrap(~insurance, labeller = as_labeller(unlist(labels)))
-p <- p + geom_vline(aes(xintercept=mn), means) + xlim(-0.1,5) +
-  theme(text = element_text(size=FONT_SIZE))
-print(p)
-ggsave("plots/histograms_of_insurances.pdf", width = 10, height = 10)
+p <- p + geom_vline(aes(xintercept=mn), ins.means) + xlim(-0.1,5) +
+  ggtitle("Number of doctor visits for different insurance types") +
+  theme(text = element_text(size=DOUBLE_FONT_SIZE))
+
+ggsave("plots/histograms_of_insurances.pdf", width = DOUBLE_WIDTH, height = DOUBLE_HEIGHT)
 
 
 # let's make a histogram how the gender influences how often you go
@@ -80,9 +78,10 @@ for (value in means$female){
 p <- ggplot(df, aes(visits)) + geom_histogram() +
   facet_wrap(~female, labeller = as_labeller(unlist(labels)))
 p <- p + geom_vline(aes(xintercept=mn), means) + xlim(-0.1,5) +
-  theme(text = element_text(size=FONT_SIZE))
+  theme(text = element_text(size=DOUBLE_FONT_SIZE)) +
+  ggtitle("Number of doctor visits for different genders")
 print(p)
-ggsave("plots/histograms_of_genders.pdf", width = 10, height = 10)
+ggsave("plots/histograms_of_genders.pdf", width = DOUBLE_WIDTH, height = HEIGHT)
 
 # make a plot that shows the chronic diseases
 df.grouped <- df %>% group_by(age, lchronic) %>%
@@ -90,4 +89,41 @@ df.grouped <- df %>% group_by(age, lchronic) %>%
 ggplot(df.grouped, aes(age, mn, color=lchronic)) + geom_point() +
   theme(text = element_text(size=FONT_SIZE)) +
   ggtitle("Mean visits vs. age for chronicly sick people and healthy people")
-ggsave("plots/mean_vs_age_and_chronic.pdf", width = 10, height = 6)
+ggsave("plots/mean_vs_age_and_chronic.pdf", width = WIDTH, height = HEIGHT)
+
+# let's tabulate the data
+
+df.grouped <- df %>% group_by(female, insurance) %>%
+  mutate(female = replace(female, female == 1, "female")) %>%
+  mutate(female = replace(female, female == 0, "male")) %>%
+  summarise(n=n(),
+            "mean age" = mean(age),
+            "mean visits" = mean(visits),
+            "variance of visits" = var(visits)
+            )
+names(df.grouped)[names(df.grouped) == 'female'] <- 'gender'
+latex.table <- kable(df.grouped, "latex",
+              caption="Descriptive statistics of the dataset by gender and insurance",
+                     midrule = "\\midrule")
+
+fileConn <- file("report/descriptive_stats_fine.txt")
+writeLines(latex.table, fileConn)
+close(fileConn)
+
+
+df.grouped <- df %>% group_by(female) %>%
+  mutate(female = replace(female, female == 1, "female")) %>%
+  mutate(female = replace(female, female == 0, "male")) %>%
+  summarise(n=n(),
+            "mean age" = mean(age),
+            "mean visits" = mean(visits),
+            "variance of visits" = var(visits)
+  )
+names(df.grouped)[names(df.grouped) == 'female'] <- 'gender'
+latex.table <- kable(df.grouped, "latex",
+                     caption="Descriptive statistics of the dataset by gender only",
+                     midrule = "\\midrule")
+
+fileConn <- file("report/descriptive_stats_coarse.txt")
+writeLines(latex.table, fileConn)
+close(fileConn)
