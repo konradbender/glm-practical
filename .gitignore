@@ -47,4 +47,5 @@ vignettes/*.pdf
 
 data
 
-/report
+report/
+!report/report.tex
