@@ -37,3 +37,12 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Mac specifics
+.DS_Store
+
+# JetBrain
+.idea/
+*.iml
+
+data
