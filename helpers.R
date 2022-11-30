@@ -1,3 +1,5 @@
+library(dplyr)
+
 get_data <- function() {
   data <- read.csv("data/docvis.csv")
   for (col in c("female", "private", "freepoor", "freerepat", "lchronic")){
@@ -8,6 +10,12 @@ get_data <- function() {
 
 get_eda_data <- function() {
   df <- read.csv("data/docvis.csv")
+  df <- df %>%
+    mutate(female = replace(female, female == 1, "female")) %>%
+    mutate(female = replace(female, female == 0, "male"))
+  df$female <- factor(df$female, levels = c("male", "female"))
+  names(df)[names(df) == 'female'] <- 'gender'
+  df$lchronic <- as.factor(df$lchronic)
   df[, "insurance"] <- "normal"
   df <- within(df, {
     insurance[df$private == 1] <- "private"

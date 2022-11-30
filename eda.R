@@ -68,15 +68,15 @@ ggsave("plots/histograms_of_insurances.pdf", width = DOUBLE_WIDTH, height = DOUB
 
 
 # let's make a histogram how the gender influences how often you go
-means <- df %>% group_by(female) %>% summarise(mn = mean(visits))
+means <- df %>% group_by(gender) %>% summarise(mn = mean(visits))
 labels <- list()
-for (value in means$female){
-  mean <- means[means$female == value, "mn"]
-  label <- paste("Female:", value, "| Mean =", round(mean, 4))
+for (value in means$gender){
+  mean <- means[means$gender == value, "mn"]
+  label <- paste("Gender:", value, "| Mean =", round(mean, 4))
   labels[as.character(value)] <- label
 }
 p <- ggplot(df, aes(visits)) + geom_histogram() +
-  facet_wrap(~female, labeller = as_labeller(unlist(labels)))
+  facet_wrap(~gender, labeller = as_labeller(unlist(labels)))
 p <- p + geom_vline(aes(xintercept=mn), means) + xlim(-0.1,5) +
   theme(text = element_text(size=DOUBLE_FONT_SIZE)) +
   ggtitle("Number of doctor visits for different genders")
@@ -93,15 +93,12 @@ ggsave("plots/mean_vs_age_and_chronic.pdf", width = WIDTH, height = HEIGHT)
 
 # let's tabulate the data
 
-df.grouped <- df %>% group_by(female, insurance) %>%
-  mutate(female = replace(female, female == 1, "female")) %>%
-  mutate(female = replace(female, female == 0, "male")) %>%
+df.grouped <- df %>% group_by(gender, insurance) %>%
   summarise(n=n(),
             "mean age" = mean(age),
             "mean visits" = mean(visits),
             "variance of visits" = var(visits)
             )
-names(df.grouped)[names(df.grouped) == 'female'] <- 'gender'
 latex.table <- kable(df.grouped, "latex",
               caption="Descriptive statistics of the dataset by gender and insurance",
                      midrule = "\\midrule")
@@ -111,15 +108,12 @@ writeLines(latex.table, fileConn)
 close(fileConn)
 
 
-df.grouped <- df %>% group_by(female) %>%
-  mutate(female = replace(female, female == 1, "female")) %>%
-  mutate(female = replace(female, female == 0, "male")) %>%
+df.grouped <- df %>% group_by(gender) %>%
   summarise(n=n(),
             "mean age" = mean(age),
             "mean visits" = mean(visits),
             "variance of visits" = var(visits)
   )
-names(df.grouped)[names(df.grouped) == 'female'] <- 'gender'
 latex.table <- kable(df.grouped, "latex",
                      caption="Descriptive statistics of the dataset by gender only",
                      midrule = "\\midrule")
