@@ -13,8 +13,8 @@ DOUBLE_FONT_SIZE <- 8
 
 WIDTH <- 4
 DOUBLE_WIDTH <- 6
-DOUBLE_HEIGHT <- 5
-HEIGHT <- 3
+DOUBLE_HEIGHT <- 3
+HEIGHT <- 2
 
 data <- get_eda_data()
 head(data)
@@ -101,7 +101,7 @@ df.grouped <- df %>% group_by(gender, insurance) %>%
             )
 latex.table <- kable(df.grouped, "latex",
               caption="Descriptive statistics of the dataset by gender and insurance",
-                     midrule = "\\midrule")
+                     midrule = "\\midrule", label = "stats_fine")
 
 fileConn <- file("report/descriptive_stats_fine.txt")
 writeLines(latex.table, fileConn)
@@ -116,7 +116,7 @@ df.grouped <- df %>% group_by(gender) %>%
   )
 latex.table <- kable(df.grouped, "latex",
                      caption="Descriptive statistics of the dataset by gender only",
-                     midrule = "\\midrule")
+                     midrule = "\\midrule", label = "stats_coarse")
 
 fileConn <- file("report/descriptive_stats_coarse.txt")
 writeLines(latex.table, fileConn)
