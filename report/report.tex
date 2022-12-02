@@ -3,7 +3,7 @@
 
 \usepackage{geometry} % for making easy changes to page layout
 \geometry{body={15cm,24cm}} % change height and width of main text
-
+\usepackage{yhmath}
 
 \usepackage{parskip} % for blank lines between paragraphs 
 \usepackage{bbm}
@@ -128,7 +128,7 @@ D^{(r)}(y) - D^{(p)}(y) \sim \chi^2_{(p-r)}
 Now, the difference in the deviances turns out to be $3.06$, and the difference in number of parameters is $5$. Hence, we have that $\mathbb{P}( \chi^2_{5} > 3.06) = 0.691$. Hence we can accept our hypothesis and move on with the model with the smaller number of parameters.
 
 \section{Assessing model fit}
-The most straightforward way to assess the model fit is to look at the scaled deviance of the model, $D(y)$. When the model is well fit, we expect $D(Y) \sim \chi^2_{(n-p)}$. With $D(y) = 5275, n = 5190$, and $p=9$, we have $\mathbb{P}( \chi^2_{5181} > 5275) = 0.178$. Although this is quite large, we can still accept this model at the $5\%$ acceptance limit.
+The most straightforward way to assess the model fit is to look at the scaled deviance of the model, $D(y)$. When the model is well fit, we expect $D(Y) \sim \chi^2_{(n-p)}$. With $D(y) = 5275, n = 5190$, and $p=9$, we have $\mathbb{P}( \chi^2_{5181} > 5275) = 0.178$. Although this is quite large, we can still accept this model at the $5\%$ acceptance limit. Also note, that for this data we do not expect the $\chi^2$ approximation for $D(y)$ to be perfect, since we have small counts in the Poisson.
 
 One could also look at the standardized deviance and Pearson residuals. However, as discusses in the lectures, those residuals are not expected to be standard normals, although they should have unit variance.
 
@@ -136,7 +136,7 @@ We thus compute the standardized deviance residuals with the \texttt{R} command 
 
 \section{Model Interpretation}
 
-We include the table of all parameter estimates, their confidence intervals and odds ratios in the appendix. Going back to equation \ref{eq:model}, the linear predictor has the form
+We list all parameter estimates, their confidence intervals and means ratios in table \ref{tab:estimates}. Going back to equation \ref{eq:model}, the linear predictor has the form
 \begin{align}
 \eta_i &= \beta_0  +  \beta_2 x^{(i)} + \beta_3 \mathbbm{1}\{x^{(g)} = \text{"female"}\}     +\beta_4\mathbbm{1}\{x^{(c)} = 1\}   + 
  \beta_5\mathbbm{1}\{x^{(t)} = \text{"private"}\}    \\
@@ -148,15 +148,44 @@ We include the table of all parameter estimates, their confidence intervals and 
 
 The interested reader may refer to table \ref{tab:estimates} for all estimates and confidence intervals. We will focus on the estimates corresponding to the age, income, and chronic disease status of the respondents.
 
-Looking at the confidence intervals of the estimates, it is striking that the parameters for the indicator that a respondent is female, and the parameter for the indicator that a respondent has free government healthcare due to poverty have the highest standard errors. Additionally, it is remarkable that the confidence intervals for the coefficients corresponding to private health insurance and "freepat" insurance contain $0$ - albeit at the far end of the interval. Hence, the true $\beta$ might either be positive or negative.
+Looking at the confidence intervals of the estimates, it is striking that the parameters for the indicator that a respondent is female, and the parameter for the indicator that a respondent has free government healthcare due to poverty have the highest standard errors. That may indicate that the data has not a lot of information on the effect of those features.
 
-Coming back to the interpretation of confidence intervals, we can say that, e.g. for $\beta_1$, the coefficient for the age of respondents, upon repeating the same sampling from the population, the true parameter $\beta_1$ will be in 95\% of the confidence intervals.
+Coming back to the interpretation of confidence intervals, we can say that, e.g. for $\beta_1$, the coefficient for the age of male respondents, upon repeating the same sampling from the population, the true parameter $\beta_1$ will be in 95\% of the confidence intervals.
 
-Now, we shall look at the odds ratio. If the odds ratio for one parameter $\beta_j$ is $O_i^j$ for sample $i$, then an increase of one unit in the variable $x_i^{(j)}$ means the expected number of doctor visits of sample $i$ will be multiplied by  $O_i^j$. For example, the odds ratio for the chronic disease state is $2.045$. This means that the expected number of doctor visits doubles if a respondent has the chronic disease! The odds for the age are a little bit difficult for female respondents, so let's interpret them for a male respondent only. We see that the odds ratio for the age is $1.016$. So, for an increase of 10 years in the respondent's age, the expected number of doctor visits will be multiplied by $1.016^{10} = 1.17$, i.e., it will increase by about 17\%.
+Now, we shall look at the means ratio. If the means ratio for one parameter $\beta_j$ is $M^j$, then an increase of one unit in the variable $x_i^{(j)}$ means the expected number of doctor visits for a sample will be multiplied by  $M^j$. For example, the means ratio for the chronic disease state is $2.045$. This means that the expected number of doctor visits doubles if a respondent has the chronic disease! Similarly, the effect of the different insurances on the number of doctor visits can be nicely explained with the Means ratio. Compared with people with normal insurance, the expected number of doctor visits is 10\% higher for privately insured people, 36\% lower for people with free insurance due to poverty, and 13\% higher for people with free insurance due to veteran status. The means ratio also helps interpreting the influence of income on the expected number of doctor visits: An increase in income of ten thousand dollars will reduce the expected number of doctor visits by about 25\%
+
+We also see that the means ratio for the age is $1.016$ for a male respondent. So, for an increase of 10 years in the respondent's age, the expected number of doctor visits will be multiplied by $1.016^{10} = 1.17$, i.e., it will increase by about 17\%. 
+
+The influence of the age is slightly different for females compared to males. Let's define $\beta_a = \beta_8 + \beta_1$, the coefficient for the age variable, $x^{(a)}$ of females. Then, the approximate variance of that estimate is:
+\begin{equation}
+\widehat{var}(\hat{\beta}_a) = \widehat{var}(\hat{\beta}_8) + \widehat{var}(\hat{\beta}_1) + 2 \widehat{Cov}(\hat{\beta}_8, \hat{\beta}_1)
+\end{equation}
+Further, we can get the odds for an age increase of a female respodnent:
+\begin{equation}
+M_a = \exp(\beta_a) = \exp(\beta_8 + \beta_1)
+\end{equation}
+With all of this, we find the following numeric values:
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+         index & beta\_i & Estimate & CI.Estimate & means ratio & CI.Means.Ratio\\
+	\midrule
+         Age (for women)& $\beta_a $ & 0.0048& [0.0029, 0.0066] & 1.0048 &[1.0029, 1.0066] \\
+        \hline
+    \end{tabular}
+    \caption{Values for the age of a female}
+    \label{tab:femal_age}
+\end{table}
+
+So, we see that the effect of age is almost negligible for women. For a ten year increase in the age, women are expected to go $1.0048^10 = 1.05$ times more often to the doctor. Hence, the increase for 10 years is 5\% for women compared to 17\% for men.
 
 \section{Estimating the dispersion parameter}
-
-
+In the lecture notes, we saw that 
+\begin{equation}
+\widehat{\phi} = \frac{1}{n-p} \sum_{i=1}^n \frac{(y_i- \hat{\mu}_i)^2}{V(\hat{\mu}_i)} = \frac{1}{n-p} \sum_{i=1}^n r_{P;i}^2
+\end{equation}
+Where $r_{P;i}$ is the (non-standardized) Pearson residual for sample $i$. Computing this in \texttt{R} yields an estimate of $\hat{\phi} = 1.992$. However, the real value for $\phi$ is $1$ in the Poisson model. Hence we should question whether the Poisson model, or the canonical link function, was actually a good choice in the first place.  
 
 % TODO variables and z values
 
