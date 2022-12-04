@@ -2,11 +2,12 @@ library(rsq)
 library(MASS)
 library(dplyr)
 library(knitr)
+library(ggplot2)
 setwd("/Users/konrad/code/school/MT/glm-practical")
 source("helpers.R")
 options(digits = 3)
 
-# SECTION 1: DEFINE HELPER FUNCTION
+## SECTION 1: DEFINE HELPER FUNCTION
 
 print_model_stats <- function(model, name) {
   print("-------------------")
@@ -47,12 +48,38 @@ paste("Probability of xi squared test comparing the models:",
 
 
 ## SECTION 3: ASSESS THE MODEL FIT
-# Conduct the xi squared test for the model
 p.final <- length(m2$coefficients)
 n <- dim(df)[1]
+
+# analyse cooks distance for samples
+max.cook <- 8/(n-2*p.final)
+outliers <- cooks.distance(m2) > max.cook
+paste("Cook's distance found", sum(outliers), "outliers.")
+
+cook.df <- data.frame(cooks.distance(m2)) %>%
+  rename("dist" = "cooks.distance.m2.")
+
+# look at the features of the samples that have high distance
+top.outliers <- head(arrange(cook.df, desc(dist)), 5)
+outlier.data <- merge(df, top.outliers, by=0)
+outlier.data <- outlier.data %>% rename(
+  "Sample No." = "Row.names",
+  "Cook's Distance" = "dist"
+)
+
+# output to Latex
+out <- kable(outlier.data, "latex",
+             caption = "Data for the 5 top outliers",
+             label = "outlier-data", position = "h")
+
+fileConn <- file("report/outlier-data.txt")
+writeLines(out, fileConn)
+close(fileConn)
+
 prob <- 1 - pchisq(m2$deviance, n - p.final)
 paste("Probability of xi squared test for the final model",
             round(prob, 3))
+
 
 # Analyze standardized deviance residuals of the model
 deviance.resids <- rstandard(m2)
@@ -61,7 +88,7 @@ paste("Variance of standardizes deviance residuals",
 
 ## SECTION 4: INTERPRET THE MODEL
 # create a dataframe with the coefficients and the beta numbers
-estimates <- summary(m2)$coefficients[, c(1, 2)]
+estimates <- summary(m2)$coefficients[, c(1, 2, 4)]
 estimates <- data.frame(estimates)
 estimates[, "index"] <- rownames(estimates)
 estimates[, "Coefficient"] <- 0:(dim(estimates)[1] - 1)
@@ -97,8 +124,8 @@ colnames(c_interval)[1] <- "index"
 joined <- inner_join(estimates, c_interval, by = "index")
 
 # select relevant columns and rename columns or features for the report
-joined <- joined[, c("index", "Coefficient", "Std..Error",
-                     "Estimate", "CI.Estimate", "M", "CI.M")]
+joined <- joined[, c("index", "Coefficient", "Estimate", "Std..Error",
+                      "CI.Estimate", "M", "CI.M", "Pr...z..")]
 
 joined[joined$index == "age", "index"] <- "age (for men)"
 joined[joined$index == "age:genderfemale", "index"] <- "age-female"
@@ -109,17 +136,18 @@ joined <- joined %>% rename(
   "CI \\hat{beta}" = CI.Estimate,
   "MR" = M,
   "CI MR" = CI.M,
-  "\\hat{beta}" = Estimate
+  "\\hat{beta}" = Estimate,
+  "Pr(>|z|)" = "Pr...z.."
 )
 
 joined[joined$Feature == "genderfemale", "Feature"] <- "female"
 joined[joined$Feature == "lchronic1", "Feature"] <- "chronic disease"
 joined[joined$Feature == "insuranceprivate", "Feature"] <-
-  "private insurance"
+  "private insur."
 joined[joined$Feature == "insurancefreepoor", "Feature"] <-
-  "freepoor insurance"
+  "freepoor insur."
 joined[joined$Feature == "insurancefreerepat", "Feature"] <-
-  "freepat insurance"
+  "freepat insur."
 
 # output to Latex
 out <- kable(joined, "latex",
@@ -156,8 +184,23 @@ paste0("Confidence interval for the means ratio of the female age: [",
              round(exp(beta.f.age + 1.96 * se.beta.f.age), 4),
              "]")
 
+AGE <- 65
+linear.diff <- m2$coefficients[4]+AGE*m2$coefficients[9]
+factor <- exp(linear.diff)
+var.female <- summary(m2)$coefficients[4, "Std. Error"] +
+  AGE^2 * summary(m2)$coefficients[9, "Std. Error"] +
+  2*AGE*varhat[4,9]
+se.female <- sqrt(var.female)
+lower.CI <- exp(linear.diff - 1.96 * se.female)
+upper.CI <- exp(linear.diff + 1.96 * se.female)
+paste("Woman of age", AGE, "has expected number of doctor visits",
+      round(factor, 4), "compared to man.")
+paste("Confidence interval for the femal influence:",
+      "[", round(lower.CI, 4), ",", round(upper.CI, 4), "]" )
+
 ## SECTION 5: ESTIMATE DISPERSION
 pearson.phi_hat <- 1 / (n - p.final) * sum(residuals.glm(m2,
                                                          type = "pearson")^2)
 
 paste("Phi Hat:", round(pearson.phi_hat, 3))
+

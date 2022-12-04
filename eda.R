@@ -5,6 +5,7 @@ library(dplyr)
 library(tidyr)
 library(gridExtra)
 library(knitr)
+library(kableExtra)
 
 options(digits = 3)
 
@@ -126,7 +127,7 @@ ggsave("plots/mean_vs_age_and_chronic.pdf",
 
 ## SECTION 2: CREATING SOME SUMMARY STATISTICS ##
 df.grouped <- df %>%
-  group_by(gender, insurance) %>%
+  group_by(insurance) %>%
   summarise(n = n(),
             "mean age" = mean(age),
             "mean visits" = mean(visits),
@@ -135,8 +136,8 @@ df.grouped <- df %>%
 # Output table to Latex
 latex.table <- kable(df.grouped, "latex",
                      caption = "Descriptive statistics of
-                     the dataset by gender and insurance",
-                     label = "stats_fine")
+                     the dataset by insurance",
+                     label = "stats_fine", position = "h")
 
 fileConn <- file("report/descriptive_stats_fine.txt")
 writeLines(latex.table, fileConn)
@@ -151,9 +152,19 @@ df.grouped <- df %>%
   )
 latex.table <- kable(df.grouped, "latex",
                      caption = "Descriptive statistics of the
-                     dataset by gender only",
-                     label = "stats_coarse")
+                     dataset by gender",
+                     label = "stats_coarse", position = "h")
 
 fileConn <- file("report/descriptive_stats_coarse.txt")
 writeLines(latex.table, fileConn)
 close(fileConn)
+
+summaries <- df %>% summarise(
+  "Min Age" = min(age),
+  "Min Income" = min(income),
+  "Max Age" = max(age),
+  "Max Income" = max(income),
+  "Min Visits" = min(visits),
+  "Max Visits" = max(visits)
+)
+summaries

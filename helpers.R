@@ -1,13 +1,5 @@
 library(dplyr)
 
-get_data <- function() {
-  data <- read.csv("data/docvis.csv")
-  for (col in c("female", "private", "freepoor", "freerepat", "lchronic")){
-    data[, col] <- as.factor(data[, col])
-  }
-  data
-}
-
 get_eda_data <- function() {
   df <- read.csv("data/docvis.csv")
   df <- df %>%
