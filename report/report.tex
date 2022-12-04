@@ -7,6 +7,7 @@
 
 \usepackage{parskip} % for blank lines between paragraphs 
 \usepackage{bbm}
+\usepackage{minted}
 
 \usepackage{amsmath,amssymb} % for serious mathematics, such as \begin{align*} etc
 
@@ -15,9 +16,15 @@
 
 \title{GLM Practical}
 \author{P806}
-\date{7 Decembre 2022}
+\date{7 December 2022}
 
 \begin{document}
+
+\newcommand{\E}{\mathrm{E}}
+
+\newcommand{\Var}{\mathrm{Var}}
+
+\newcommand{\Cov}{\mathrm{Cov}}
 
 \maketitle
 
@@ -104,16 +111,16 @@ After fitting this simple model, we analyze the z scores for the different coeff
 
 The backwards feature elimination found that the interaction terms of the gender with the income, the chronic disease indicator, and the categorical variable for the type of insurance should be removed.
 
-In table \ref{tab:backwards_elimination}, we show the AIC, Deviance and the generalized $R^2$ metric as defined by Cameron and Windmeijer (1997). The analysis nicely shows how the removal of the three interaction terms (and 5 coefficients in $\hat{\beta}$ reduced the AIC while slightly increasing the Deviance and $R^2$ metric of the model, as expected. Note that we still chose the model with higher Deviance, because our model selection criterion is the AIC. A low AIC is desirable in our setting because we want to interpret the model at the end, hence we must strike a good balance between maximizing the likelihood and keeping the number of parameters, $p$, manageable.
+In table \ref{tab:backwards_elimination}, we show the AIC, deviance and the generalized $R^2$ metric as defined by Cameron and Windmeijer (1997). The analysis nicely shows how the removal of the 5 interaction coefficients in $\hat{\beta}$ reduced the AIC while slightly increasing the deviance and $R^2$ metric of the model, as expected. Note that we still chose the model with higher deviance and $R^2$ metric, because our model selection criterion is the AIC. A low AIC is desirable in our setting because we want to interpret the model at the end, hence we must strike a good balance between maximizing the likelihood and keeping the number of parameters, $p$, manageable.
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{|c|c|c|c|}
+    \begin{tabular}{|l|l|r|r|r|}
     \hline
-    Model & AIC & Deviance & $R^2$\\
+ \# &Model & AIC & Deviance & $R^2$\\
     \hline
-    Baseline Model with all features ($p=14$) &  7631.499 & 5271.931 & 0.644\\
-    After backwards feature elimination ($p=9$) & 7624.555 & 5274.988  & 0.639\\
+1&    Baseline Model with all features ($p=14$) &  7631.499 & 5271.931 & 0.644\\
+2&    After backwards feature elimination ($p=9$) & 7624.555 & 5274.988  & 0.639\\
         \hline
         
     \end{tabular}
@@ -125,60 +132,56 @@ Now that we have the hypothesis that five parameters of the initial $\hat{\beta}
 \begin{equation}
 D^{(r)}(y) - D^{(p)}(y) \sim \chi^2_{(p-r)}
 \end{equation}
-Now, the difference in the deviances turns out to be $3.06$, and the difference in number of parameters is $5$. Hence, we have that $\mathbb{P}( \chi^2_{5} > 3.06) = 0.691$. Hence we can accept our hypothesis and move on with the model with the smaller number of parameters.
+Now, the difference in the deviances turns out to be $3.06$, and the difference in number of parameters is $5$. Also, we have that $\mathbb{P}( \chi^2_{5} > 3.06) = 0.691$. Hence we can accept our hypothesis and move on with the model with the smaller number of parameters.
 
 \section{Assessing model fit}
 The most straightforward way to assess the model fit is to look at the scaled deviance of the model, $D(y)$. When the model is well fit, we expect $D(Y) \sim \chi^2_{(n-p)}$. With $D(y) = 5275, n = 5190$, and $p=9$, we have $\mathbb{P}( \chi^2_{5181} > 5275) = 0.178$. Although this is quite large, we can still accept this model at the $5\%$ acceptance limit. Also note, that for this data we do not expect the $\chi^2$ approximation for $D(y)$ to be perfect, since we have small counts in the Poisson.
 
-One could also look at the standardized deviance and Pearson residuals. However, as discusses in the lectures, those residuals are not expected to be standard normals, although they should have unit variance.
-
-We thus compute the standardized deviance residuals with the \texttt{R} command \texttt{rstandard} and find that the variance of those residuals is, in fact, $0.92$. Hence, the variance of the residuals is in the expected range.
+One could also look at the standardized deviance and standardized Pearson residuals. However, as discussed in the lectures, those residuals are not expected to be standard normals, although they should have unit variance. We thus compute the standardized deviance residuals with the \texttt{R} command \texttt{rstandard} and find that the variance of those residuals is, in fact, $0.92$. Hence, the variance of the residuals is in the expected range.
 
 \section{Model Interpretation}
 
 We list all parameter estimates, their confidence intervals and means ratios in table \ref{tab:estimates}. Going back to equation \ref{eq:model}, the linear predictor has the form
 \begin{align}
 \eta_i &= \beta_0  +  \beta_2 x^{(i)} + \beta_3 \mathbbm{1}\{x^{(g)} = \text{"female"}\}     +\beta_4\mathbbm{1}\{x^{(c)} = 1\}   + 
- \beta_5\mathbbm{1}\{x^{(t)} = \text{"private"}\}    \\
+ \beta_5\mathbbm{1}\{x^{(t)} = \text{"private"}\}    \nonumber\\
  &+  \beta_6\mathbbm{1}\{x^{(t)} = \text{"freepoor"}\}  + \beta_7 \mathbbm{1}\{x^{(t)} = \text{"freerepat"}\}  \\
-&+   x^{(a)}(\beta_8 \mathbbm{1}\{x^{(g)} = \text{"female"} \} + \beta_1)
+&+   x^{(a)}(\beta_8 \mathbbm{1}\{x^{(g)} = \text{"female"} \} + \beta_1) \nonumber
 \end{align}
 
 \input{../report/estimates.txt}
 
-The interested reader may refer to table \ref{tab:estimates} for all estimates and confidence intervals. We will focus on the estimates corresponding to the age, income, and chronic disease status of the respondents.
-
 Looking at the confidence intervals of the estimates, it is striking that the parameters for the indicator that a respondent is female, and the parameter for the indicator that a respondent has free government healthcare due to poverty have the highest standard errors. That may indicate that the data has not a lot of information on the effect of those features.
 
-Coming back to the interpretation of confidence intervals, we can say that, e.g. for $\beta_1$, the coefficient for the age of male respondents, upon repeating the same sampling from the population, the true parameter $\beta_1$ will be in 95\% of the confidence intervals.
+Coming back to the interpretation of confidence intervals, we can say that, e.g. for $\beta_1$ (the coefficient for the age of male respondents), upon repeating the same sampling from the population, the true parameter $\beta_1$ will be in 95\% of the confidence intervals.
 
-Now, we shall look at the means ratio. If the means ratio for one parameter $\beta_j$ is $M^j$, then an increase of one unit in the variable $x_i^{(j)}$ means the expected number of doctor visits for a sample will be multiplied by  $M^j$. For example, the means ratio for the chronic disease state is $2.045$. This means that the expected number of doctor visits doubles if a respondent has the chronic disease! Similarly, the effect of the different insurances on the number of doctor visits can be nicely explained with the Means ratio. Compared with people with normal insurance, the expected number of doctor visits is 10\% higher for privately insured people, 36\% lower for people with free insurance due to poverty, and 13\% higher for people with free insurance due to veteran status. The means ratio also helps interpreting the influence of income on the expected number of doctor visits: An increase in income of ten thousand dollars will reduce the expected number of doctor visits by about 25\%
+Now, we shall look at the means ratios. If the means ratio for one parameter $\beta_j$ is $M^j$, then an increase of one unit in the variable $x_i^{(j)}$ means the expected number of doctor visits in a two-week period for a sample will be multiplied by  $M^j$. For example, the means ratio for the chronic disease state is $2.045$. This means that the expected number of doctor visits doubles if a respondent has the chronic disease! Similarly, the effect of the different insurances on the number of doctor visits can be nicely explained with the means ratio. Compared to people with normal insurance, the expected number of doctor visits is 10\% higher for privately insured people, 13\% higher for people with free insurance due to veteran status, and 36\% lower for people with free insurance due to poverty. The means ratio also helps interpreting the influence of income on the expected number of doctor visits: An increase in income of ten thousand dollars will reduce the expected number of doctor visits by about 25\%.
 
-We also see that the means ratio for the age is $1.016$ for a male respondent. So, for an increase of 10 years in the respondent's age, the expected number of doctor visits will be multiplied by $1.016^{10} = 1.17$, i.e., it will increase by about 17\%. 
+We also see that the means ratio for the age feature is $1.016$ for a male respondent. So, for an increase of 10 years in the respondent's age, the expected number of doctor visits will be multiplied by $1.016^{10} = 1.17$, i.e., it will increase by about 17\%. 
 
-The influence of the age is slightly different for females compared to males. Let's define $\beta_a = \beta_8 + \beta_1$, the coefficient for the age variable, $x^{(a)}$ of females. Then, the approximate variance of that estimate is:
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|r|l|r|l|}
+\hline
+Feature & Coefficient & $\hat{\beta}_i$ & CI $\hat{\beta}_i$ & MR & CI MR\\
+\hline
+         Age (for women)& $\beta_a $ & 0.0048&[0.0012, 0.0084]& 1.0048 &[1.0029, 1.0066] \\
+\hline
+ \end{tabular}
+ \caption{\label{tab:femal_age}Parameter estimates and means ratios (MR)
+             with their 0.95 confidence intervals}
+\end{table}
+
+The influence of the age is slightly different for females compared to males. Let's define $\beta_a = \beta_8 + \beta_1$, the coefficient for the age variable, $x^{(a)}$, of females. Then, the approximate variance of that estimate is:
 \begin{equation}
-\widehat{var}(\hat{\beta}_a) = \widehat{var}(\hat{\beta}_8) + \widehat{var}(\hat{\beta}_1) + 2 \widehat{Cov}(\hat{\beta}_8, \hat{\beta}_1)
+\widehat{\Var}(\hat{\beta}_a) = \widehat{\Var}(\hat{\beta}_8) + \widehat{\Var}(\hat{\beta}_1) + 2 \widehat{\Cov}(\hat{\beta}_8, \hat{\beta}_1)
 \end{equation}
-Further, we can get the odds for an age increase of a female respodnent:
+Further, we can get the odds for an age increase of a female respondent:
 \begin{equation}
 M_a = \exp(\beta_a) = \exp(\beta_8 + \beta_1)
 \end{equation}
-With all of this, we find the following numeric values:
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|}
-    \hline
-         index & beta\_i & Estimate & CI.Estimate & means ratio & CI.Means.Ratio\\
-	\midrule
-         Age (for women)& $\beta_a $ & 0.0048& [0.0029, 0.0066] & 1.0048 &[1.0029, 1.0066] \\
-        \hline
-    \end{tabular}
-    \caption{Values for the age of a female}
-    \label{tab:femal_age}
-\end{table}
-
-So, we see that the effect of age is almost negligible for women. For a ten year increase in the age, women are expected to go $1.0048^10 = 1.05$ times more often to the doctor. Hence, the increase for 10 years is 5\% for women compared to 17\% for men.
+With all of this, we find the numeric values shown in table \ref{tab:femal_age}.
+So, we see that the effect of age is almost negligible for women. For a ten year increase in the age, women are expected to go $1.0048^{10} = 1.05$ times more often to the doctor. Hence, the increase for 10 years is 5\% for women compared to 17\% for men. One could conclude that with increasing age, men's doctors visits is more strongly increasing than women's doctors visits. There can be plenty of reasons for this, but note that men have a lower life expectancy in general, so the process of needing more medical support might start at an earlier age in men compared to women.
 
 \section{Estimating the dispersion parameter}
 In the lecture notes, we saw that 
@@ -187,6 +190,338 @@ In the lecture notes, we saw that
 \end{equation}
 Where $r_{P;i}$ is the (non-standardized) Pearson residual for sample $i$. Computing this in \texttt{R} yields an estimate of $\hat{\phi} = 1.992$. However, the real value for $\phi$ is $1$ in the Poisson model. Hence we should question whether the Poisson model, or the canonical link function, was actually a good choice in the first place.  
 
-% TODO variables and z values
+\section{Appendix}
+\subsection{EDA Script}
+\begin{minted}[linenos]{R}
+setwd("/Users/konrad/code/school/MT/glm-practical")
+source("helpers.R")
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(gridExtra)
+library(knitr)
+
+options(digits = 3)
+
+# Define some constants - widths and heights in inches
+FONT_SIZE <- 7
+DOUBLE_FONT_SIZE <- 8
+WIDTH <- 4
+DOUBLE_WIDTH <- 6
+DOUBLE_HEIGHT <- 3
+HEIGHT <- 2
+
+# use method from helper package
+df <- get_eda_data()
+
+## SECTION 1: PLOTTING ##
+
+# Make a histogram of all the reponses together
+ggplot(df) +
+  geom_histogram(aes(visits)) +
+  geom_vline(xintercept = mean(df$visits)) +
+  ggtitle(paste("Number of doctor visists across all individuals | Mean =",
+                round(mean(df$visits), 3))) +
+  theme(text = element_text(size = FONT_SIZE)) +
+  xlab("Visits") +
+  ylab("Count of Respondents") +
+  xlim(-0.25, 8)
+ggsave("plots/histogram_of_visits.pdf",
+       width = WIDTH, height = HEIGHT)
+
+# Make plots by income and age
+# First: group data by income only
+df.grouped <- df %>%
+  group_by(income) %>%
+  summarise(n(), max(visits), min(visits), mn = mean(visits))
+p1 <- ggplot(df.grouped, aes(income, mn)) + geom_point()
+p1 <- p1 + ggtitle("Mean visists as a function of income")
+p1 <- p1 +
+  theme(text = element_text(size = DOUBLE_FONT_SIZE)) +
+  xlab("Income") +
+  ylab("Mean Visits")
+
+# Second: group data by age only
+df.grouped <- df %>%
+  group_by(age) %>%
+  summarise(n(), max(visits), min(visits), mn = mean(visits))
+p2 <- ggplot(df.grouped, aes(age, mn)) + geom_point()
+p2 <- p2 + ggtitle("Mean doctor visists as a function of age")
+p2 <- p2 +
+  theme(text = element_text(size = DOUBLE_FONT_SIZE)) +
+  xlab("Age") +
+  ylab("Mean Visits")
+
+ggsave("plots/mean_vs_income_and_age.pdf",
+       arrangeGrob(p1, p2, nrow = 1, ncol = 2),
+       width = DOUBLE_WIDTH, height = HEIGHT)
+
+# Make a histogram how the insurance influences how often people go
+# mean number of visits for different insurance types
+ins.means <- df %>%
+  group_by(insurance) %>%
+  summarise(mn = mean(visits))
+labels <- list()
+for (value in ins.means$insurance) {
+  m <- ins.means[ins.means$insurance == value, "mn"]
+  label <- paste("Insurance:", value, "| Mean =", round(m, 4))
+  labels[value] <- label
+}
+# now make a histogram divided by insurance type
+p <- ggplot(df, aes(visits)) +
+  geom_histogram() +
+  facet_wrap(~insurance, labeller = as_labeller(unlist(labels))) +
+  geom_vline(aes(xintercept = mn), ins.means) +
+  xlim(-0.1, 5) +
+  ggtitle("Number of doctor visits for different insurance types") +
+  theme(text = element_text(size = DOUBLE_FONT_SIZE)) +
+  xlab("Visits") +
+  ylab("Count of respondents")
+
+ggsave("plots/histograms_of_insurances.pdf",
+       width = DOUBLE_WIDTH, height = DOUBLE_HEIGHT)
+
+
+# Make a histogram how the gender influences how often people go
+means <- df %>%
+  group_by(gender) %>%
+  summarise(mn = mean(visits))
+labels <- list()
+for (value in means$gender) {
+  mean <- means[means$gender == value, "mn"]
+  label <- paste("Gender:", value, "| Mean =", round(mean, 4))
+  labels[as.character(value)] <- label
+}
+p <- ggplot(df, aes(visits)) +
+  geom_histogram() +
+  facet_wrap(~gender, labeller = as_labeller(unlist(labels))) +
+  geom_vline(aes(xintercept = mn), means) +
+  xlim(-0.1, 5) +
+  theme(text = element_text(size = DOUBLE_FONT_SIZE)) +
+  xlab("Visits") +
+  ylab("Count of Respondents")
+ggtitle("Number of doctor visits for different genders")
+ggsave("plots/histograms_of_genders.pdf",
+       width = DOUBLE_WIDTH, height = HEIGHT)
+
+# Make a plot that shows the chronic diseases impact
+df.grouped <- df %>%
+  group_by(age, lchronic) %>%
+  summarise(n(), max(visits), min(visits), mn = mean(visits))
+ggplot(df.grouped, aes(age, mn, color = lchronic)) +
+  geom_point() +
+  theme(text = element_text(size = FONT_SIZE)) +
+  ggtitle("Mean visits vs. age for chronicly sick
+    people and healthy people") +
+  xlab("Age") +
+  ylab("Mean Visits") +
+  labs(colour = "Chronic\nDisease")
+ggsave("plots/mean_vs_age_and_chronic.pdf",
+       width = WIDTH, height = HEIGHT)
+
+## SECTION 2: CREATING SOME SUMMARY STATISTICS ##
+df.grouped <- df %>%
+  group_by(gender, insurance) %>%
+  summarise(n = n(),
+            "mean age" = mean(age),
+            "mean visits" = mean(visits),
+            "variance of visits" = var(visits)
+  )
+# Output table to Latex
+latex.table <- kable(df.grouped, "latex",
+                     caption = "Descriptive statistics of
+                     the dataset by gender and insurance",
+                     label = "stats_fine")
+
+fileConn <- file("report/descriptive_stats_fine.txt")
+writeLines(latex.table, fileConn)
+close(fileConn)
+
+df.grouped <- df %>%
+  group_by(gender) %>%
+  summarise(n = n(),
+            "mean age" = mean(age),
+            "mean visits" = mean(visits),
+            "variance of visits" = var(visits)
+  )
+latex.table <- kable(df.grouped, "latex",
+                     caption = "Descriptive statistics of the
+                     dataset by gender only",
+                     label = "stats_coarse")
+
+fileConn <- file("report/descriptive_stats_coarse.txt")
+writeLines(latex.table, fileConn)
+close(fileConn)
+\end{minted}
+
+\subsection{Modelling and Interpretation Script}
+
+\begin{minted}[linenos]{R}
+library(rsq)
+library(MASS)
+library(dplyr)
+library(knitr)
+setwd("/Users/konrad/code/school/MT/glm-practical")
+source("helpers.R")
+options(digits = 3)
+
+# SECTION 1: DEFINE HELPER FUNCTION
+
+print_model_stats <- function(model, name) {
+  print("-------------------")
+  print(paste("Statistics for the model name:", name))
+  print(paste("AIC of the model:", round(extractAIC(model)[2], 3)))
+  print(paste("Deviance of the model:", round(model$deviance, 3)))
+  print(paste("KL-R^2:", round(rsq.kl(model), 4)))
+  print(paste("Number of coefficients (p):", length(model$coefficients)))
+  print("===================")
+}
+
+## SECTION 2: LOAD DATA AND START MODELING
+df <- get_eda_data()
+
+# model 1: Baseline with all features
+m1 <- glm(visits ~ . + gender * ., data = df, family =
+  poisson(link = log))
+
+# model 2: Eliminate some features with backwards AIC search
+m2 <- stepAIC(m1,
+              direction = "backward",
+              scope = list(upper = visits ~ . + gender * .,
+                           lower = ~1),
+              trace = FALSE
+)
+
+print_model_stats(m1, "baseline")
+print_model_stats(m2, "after AIC reduction")
+
+# Conduct the hypothesis test if th suggested coefficients are 0
+lambda <- m2$deviance - m1$deviance
+delta.df <- length(m1$coefficients) - length(m2$coefficients)
+prob <- 1 - pchisq(lambda, delta.df)
+paste("Difference in deviances between the two models:",
+            round(lambda, 3))
+paste("Probability of xi squared test comparing the models:",
+            round(prob, 3))
+
+
+## SECTION 3: ASSESS THE MODEL FIT
+# Conduct the xi squared test for the model
+p.final <- length(m2$coefficients)
+n <- dim(df)[1]
+prob <- 1 - pchisq(m2$deviance, n - p.final)
+paste("Probability of xi squared test for the final model",
+            round(prob, 3))
+
+# Analyze standardized deviance residuals of the model
+deviance.resids <- rstandard(m2)
+paste("Variance of standardizes deviance residuals",
+            var(deviance.resids))
+
+## SECTION 4: INTERPRET THE MODEL
+# create a dataframe with the coefficients and the beta numbers
+estimates <- summary(m2)$coefficients[, c(1, 2)]
+estimates <- data.frame(estimates)
+estimates[, "index"] <- rownames(estimates)
+estimates[, "Coefficient"] <- 0:(dim(estimates)[1] - 1)
+estimates[, "Coefficient"] <- sapply(estimates[, "Coefficient"],
+                                     FUN = function(row) {
+                                       paste0("beta_", row)
+                                     })
+
+# compute the means ratio
+estimates[, "M"] <- exp(estimates[, "Estimate"])
+
+# compute 95% Confidence intervals
+c_interval <- data.frame(estimates[, "index"])
+c_interval[, "CI.Estimate"] <- NA
+c_interval[, "CI.M"] <- NA
+for (i in 1:dim(c_interval)[1]) {
+  est <- estimates[i, "Estimate"]
+  std <- estimates[i, "Std..Error"]
+  c_interval[i,
+             "CI.Estimate"] <- paste0("[",
+                                      round(est - 1.96 * std, 3), ", ",
+                                      round(est + 1.96 * std, 3),
+                                      "]")
+  c_interval[i, "CI.M"] <- paste0("[",
+                                  round(exp(est - 1.96 * std), 3), ", ",
+                                  round(exp(est + 1.96 * std), 3),
+                                  "]")
+}
+c_interval <- data.frame(c_interval)
+colnames(c_interval)[1] <- "index"
+
+# join the estimates and the confidence intervals
+joined <- inner_join(estimates, c_interval, by = "index")
+
+# select relevant columns and rename columns or features for the report
+joined <- joined[, c("index", "Coefficient", "Std..Error",
+                     "Estimate", "CI.Estimate", "M", "CI.M")]
+
+joined[joined$index == "age", "index"] <- "age (for men)"
+joined[joined$index == "age:genderfemale", "index"] <- "age-female"
+
+joined <- joined %>% rename(
+  Feature = index,
+  "SE" = "Std..Error",
+  "CI \\hat{beta}" = CI.Estimate,
+  "MR" = M,
+  "CI MR" = CI.M,
+  "\\hat{beta}" = Estimate
+)
+
+joined[joined$Feature == "genderfemale", "Feature"] <- "female"
+joined[joined$Feature == "lchronic1", "Feature"] <- "chronic disease"
+joined[joined$Feature == "insuranceprivate", "Feature"] <-
+  "private insurance"
+joined[joined$Feature == "insurancefreepoor", "Feature"] <-
+  "freepoor insurance"
+joined[joined$Feature == "insurancefreerepat", "Feature"] <-
+  "freepat insurance"
+
+# output to Latex
+out <- kable(joined, "latex",
+             caption = "Parameter estimates and means ratios (MR)
+             with their 0.95 confidence intervals",
+             label = "estimates")
+
+fileConn <- file("report/estimates.txt")
+writeLines(out, fileConn)
+close(fileConn)
+
+# find the standard error for the influence of the age for women
+varhat <- vcov(m2)
+beta.f.age <- m2$coefficients[["age"]] + m2$coefficients[["age:genderfemale"]]
+
+paste("Estimate for the female age
+  coefficient:", round(beta.f.age, 4))
+
+var.beta.f.age <- varhat["age", "age"] +
+  varhat["age:genderfemale", "age:genderfemale"] +
+  2 * varhat["age", "age:genderfemale"]
+se.beta.f.age <- sqrt(var.beta.f.age)
+
+# compute confidence interval and odds ratio for the influence
+# of age for femalse
+paste0("Confidence interval for the age of a female: [",
+             round(beta.f.age - 1.96 * se.beta.f.age, 4), ", ",
+             round(beta.f.age + 1.96 * se.beta.f.age, 4),
+             "]")
+odds.beta.a <- exp(beta.f.age)
+paste("means ratio for the age of a female:", round(odds.beta.a, 4))
+paste0("Confidence interval for the means ratio of the female age: [",
+             round(exp(beta.f.age - 1.96 * se.beta.f.age), 4), ", ",
+             round(exp(beta.f.age + 1.96 * se.beta.f.age), 4),
+             "]")
+
+## SECTION 5: ESTIMATE DISPERSION
+pearson.phi_hat <- 1 / (n - p.final) * sum(residuals.glm(m2,
+                                                         type = "pearson")^2)
+
+paste("Phi Hat:", round(pearson.phi_hat, 3))
+
+\end{minted}
+
 
 \end{document}

@@ -62,7 +62,7 @@ ggsave("plots/mean_vs_income_and_age.pdf",
        width = DOUBLE_WIDTH, height = HEIGHT)
 
 # Make a histogram how the insurance influences how often people go
-# mean number of visits for different insurance types
+# Compute mean number of visits for different insurance types
 ins.means <- df %>%
   group_by(insurance) %>%
   summarise(mn = mean(visits))
