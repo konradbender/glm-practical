@@ -187,16 +187,18 @@ paste0("Confidence interval for the means ratio of the female age: [",
 AGE <- 65
 linear.diff <- m2$coefficients[4]+AGE*m2$coefficients[9]
 factor <- exp(linear.diff)
-var.female <- summary(m2)$coefficients[4, "Std. Error"] +
-  AGE^2 * summary(m2)$coefficients[9, "Std. Error"] +
+var.female <- varhat["genderfemale", "genderfemale"] +
+  AGE^2 * varhat["age:genderfemale", "age:genderfemale"] +
   2*AGE*varhat[4,9]
 se.female <- sqrt(var.female)
 lower.CI <- exp(linear.diff - 1.96 * se.female)
 upper.CI <- exp(linear.diff + 1.96 * se.female)
 paste("Woman of age", AGE, "has expected number of doctor visits",
       round(factor, 4), "compared to man.")
-paste("Confidence interval for the femal influence:",
-      "[", round(lower.CI, 4), ",", round(upper.CI, 4), "]" )
+paste0("Confidence interval for the femal influence at age ", AGE, ": ",
+      "[", round(lower.CI, 3), ",", round(upper.CI, 3), "]" )
+paste("Woman of age", AGE, "has standard error",
+      round(se.female, 4))
 
 ## SECTION 5: ESTIMATE DISPERSION
 pearson.phi_hat <- 1 / (n - p.final) * sum(residuals.glm(m2,
