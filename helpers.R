@@ -14,7 +14,6 @@ get_eda_data <- function() {
     insurance[df$freepoor == 1] <- "freepoor"
     insurance[df$freerepat == 1] <- "freerepat"
   } )
-
   df$insurance <- factor(df[, "insurance"],
                          levels = c("normal", "private", "freepoor", "freerepat"))
 

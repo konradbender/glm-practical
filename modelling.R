@@ -153,7 +153,7 @@ joined[joined$Feature == "insurancefreerepat", "Feature"] <-
 out <- kable(joined, "latex",
              caption = "Parameter estimates and means ratios (MR)
              with their 0.95 confidence intervals",
-             label = "estimates")
+             label = "estimates", position = "h")
 
 fileConn <- file("report/estimates.txt")
 writeLines(out, fileConn)
