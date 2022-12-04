@@ -29,15 +29,15 @@
 \maketitle
 
 \section{Introduction}
-The presented dataset consists 5190 responses to a survey about doctor visits. For each response, the number of doctor visits in the two weeks before the survey is the response variable, and information about the age, income, insurance, and chronic diseases is recorded. Hence the design of the dataset is
+The presented dataset consists of 5190 responses to a survey about doctor visits. For each response, the number of doctor visits in the two weeks before the survey is the response variable, and information about the age, gender, income, insurance, and chronic diseases is recorded about the respondents. Hence the design of the dataset is
 \begin{align*}
 \centering
 \mathbf{x}  & \longmapsto y \\
 \mathbf{x} &= (\text{Age, Gender, Income, Type of Insurance, Chronic Condition}) \\
  &= (x^{(a)}, x^{(g)}, x^{(i)}, x^{(t)}, x^{(c)}) \\
-y &= \text{Number of Doctor Visits in preceding two weeks}
+y &= \text{Number of Doctor Visits in preceding two weeks} \in \mathbb{N}
 \end{align*}
-$a$ and $i$, the age and the income of survey respondents, are real numbers, while $t$ and $c$ are categorical variables.
+$x^{(a)}$ and $x^{(i)}$, the age and the income of survey respondents, are real numbers, while $x^{(t)}$, $x^{(g)}$, and $x^{(c)}$ are categorical variables.
 
 Note that in the raw dataset, there is no column on insurance type, but the insurance type is constructed from the columns \texttt{private, freepoor, freerepat}. Those columns are binary indicator variables for the three insurance types, and they are never all \texttt{1} for any sample. So, we can just create a variable \texttt{insurance} that is a categorical variable and has four different possible values: \texttt{private, freepoor, freerepat}, and \texttt{normal}. $\texttt{insurance} = \texttt{normal}$  if \texttt{private, freepoor, freerepat} are all $0$ in the original dataset.
 
@@ -52,7 +52,7 @@ Similarly, there is not actually a \texttt{gender} variable in the dataset, but 
 \section{Data Exploration}
 First, looking at figure \ref{fig:hist_all}, we see that a large majority of the survey answers are $0$. The mean response is $0.302$. Considering that we are counting occurrences of events and the large zero-count, a Poisson model lends itself as a good model to fit to the data. The model will help us understand the relationship of the different features of the $\mathbf{x_i}$ and the count of doctor visits, $y_i$.
 
-Figure \ref{fig:hist_insurances} gives a first glimpse into that relationship. We see the same plot as in figure \ref{fig:hist_all}, but for the dataset split by the type of insurance the survey respondents had. We see that the type of insurance has some influence of the mean number of visits to the doctor. In particular, people with free government insurance due to old age, disability, or veteran status, i.e., $x^{(t)} = \texttt{freerepat}$ have a much higher mean number of doctor visits than people with other type of insurance. 
+Figure \ref{fig:hist_insurances} gives a first glimpse into that relationship. We see the same plot as in figure \ref{fig:hist_all}, but for the dataset split by the type of insurance the survey respondents had. We see that the type of insurance has some influence of the mean number of visits to the doctor. In particular, people with free government insurance due to old age, disability, or veteran status, i.e., $x^{(t)} = \texttt{freerepat}$ have a much higher mean number ($0.4665$) of doctor visits than people with other type of insurance. 
 
 \begin{figure}[h]
 	\centering
@@ -61,15 +61,15 @@ Figure \ref{fig:hist_insurances} gives a first glimpse into that relationship. W
 			\label{fig:hist_insurances}
 \end{figure}
 
-This is supported by table \ref{tab:stats_fine}. We see that both for male and female respondents, the mean number of doctor visits of respondents with the \texttt{freerepat} insurance is the highest. Interestingly, the number of doctor visits from those patients also has the highest variance. In general, we see that the variance of doctor visits increases with increasing mean, albeit that the data from female respondents has in general higher variance.
+This is supported by table \ref{tab:stats_fine}. We see that the mean number of doctor visits of respondents with the \texttt{freerepat} insurance is the highest. This might be because the insurance has an influence on the number of doctor visits, or because the respondents with that insurance had a higher age on average. Additionally, the number of doctor visits from those patients has the highest variance. In general, we see that the variance of doctor visits increases with increasing mean.
 
 \input{../report/descriptive_stats_fine.txt}
 
-Table \ref{tab:stats_coarse} shows the effect of the gender on doctor visits in more detail. We see again that females have a higher mean number of visits and variance of visits. But in this table, it comes apparent that this might actually be the case because the sample includes women of a higher age, on average.
-
-In order to understand if the age has an influence on the number of doctor visits, we refer to figure \ref{fig:scatter_income_and_age}. There, we see nicely how the mean number of doctor visits \emph{decreases} with increasing age and \emph{increases} with increasing age. We might thus postulate the hypotheses that the mean number of doctor visits depends strongly on age and income. We shall further investigate this hypothesis in the next section.
+Table \ref{tab:stats_coarse} shows the effect of the gender on doctor visits. We see that females have a higher mean number of visits and a higher variance of visits. But in this table, it comes apparent that this might actually be the case because the sample includes women of a higher age, on average.
 
 \input{../report/descriptive_stats_coarse.txt}
+
+In order to understand if the age has an influence on the number of doctor visits, we refer to figure \ref{fig:scatter_income_and_age}. There, we see nicely how the mean number of doctor visits \emph{decreases} with increasing income and \emph{increases} with increasing age. We might thus postulate the hypotheses that the mean number of doctor visits depends on age and income. We shall further investigate this hypothesis in the next section.
 
 \begin{figure}[h]
 	\centering
@@ -86,32 +86,47 @@ In order to understand if the age has an influence on the number of doctor visit
 \label{fig:scatter_age_and_chronic}
 \end{figure}
 
-One feature of $\mathbf{x}$ we have not analyzed yet is $x^{(c)}$, the binary indicator if the respondent has a chronic condition limiting activity. For this, we refer to figure \ref{fig:scatter_age_and_chronic}.  That plot shows the mean number of doctor visits as a function of respondent age, split by the value of $x^{(c)}$. From that plot, we may hypothesize that having a chronic disease increases the number of doctor visits. This also makes sense intuitively, as those patients need regularly scheduled check-ups or procedures.
+One feature of $\mathbf{x}$ we have not analyzed yet is $x^{(c)}$, the binary indicator if the respondent has a chronic condition limiting activity. For this, we refer to figure \ref{fig:scatter_age_and_chronic}.  That plot shows the mean number of doctor visits as a function of respondent age, split by the value of $x^{(c)}$. From that plot, we may hypothesize that having a chronic disease increases the number of doctor visits. 
 
+\subsection{Domain check on continuous variables}
+
+We should make sure that all variables are in a domain that makes sense in the real world, i.e., we should impose maximum and minimum values on \texttt{age}, \texttt{income}, and \texttt{visits}. Table \ref{tab:min-max} shows the extrema for all those variables in the dataset. We see that there are no samples out of the range of reasonable values, hence we can include all samples in the analysis.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|r|}
+\hline
+Variable & Min & Max\\
+\hline
+Age & 19 & 72 \\
+Income & 0 & 1.5 \\
+Visits & 0 & 9 \\
+\hline
+\end{tabular}
+\caption{Minimum and maximum values for real variables}
+\label{tab:min-max}
+
+\end{table}
 
 
 \section{Modelling of the Relationship}
 In the assignment, we were asked to develop a Poisson model with canonical link function. Thus, the relationship of $y_i$ and $\mathbf{x_i}$ is:
 \begin{align}
 & y_i \sim \text{Poisson}(\lambda_i) \\
-&\lambda_i = \exp(\mathbf{x_i}^T\beta)
+&\lambda_i = \exp{eta_i} = \exp(\mathbf{x_i}^T\beta)
     \label{eq:model}
 \end{align}
-Since for the Poisson model we have $\mu = \lambda$, we see that the canonical link function in this case is $g(\mu) = \log(\mu)$.
+Since for the Poisson model we have $\mu = \lambda$, we see that the canonical link function in this case is $\eta = g(\mu) = \log(\mu)$.
 
-The assignment further asks us to only consider the interaction term of the gender feature, $x^{(g)}$ with the other features of $\mathbf{x}$.
-
-The model with all allowed interaction terms can be created in \texttt{R} with the following command:
+The assignment further asks us to only consider the interaction term of the gender feature, $x^{(g)}$ with the other features of $\mathbf{x}$. The model with all those allowed interaction terms can be created in \texttt{R} with the following command:
 
 \begin{verbatim}
 glm(visits ~ . + gender*., data = df, family = poisson(link = log))
 \end{verbatim}
 
-After fitting this simple model, we analyze the z scores for the different coefficients of $\hat{\beta}$. The z values for many coefficients are suggesting that it is quite likely that they are zero. Hence, we will use a backwards AIC search to set certain estimates $\hat{\beta}_j$ to zero if that helps us reduce the AIC of the model.  This will be conducted with the \texttt{stepAIC} method from the \texttt{R MASS} package.
+After fitting this simple model, we analyzed the z scores for the different coefficients of $\hat{\beta}$. The z values for many coefficients were suggesting that it was quite likely that they are zero. Hence, we used a backwards AIC search to set certain estimates $\hat{\beta}_j$ to zero.  This was be conducted with the \texttt{stepAIC} method from the \texttt{MASS} package for \texttt{R}.
 
 The backwards feature elimination found that the interaction terms of the gender with the income, the chronic disease indicator, and the categorical variable for the type of insurance should be removed.
-
-In table \ref{tab:backwards_elimination}, we show the AIC, deviance and the generalized $R^2$ metric as defined by Cameron and Windmeijer (1997). The analysis nicely shows how the removal of the 5 interaction coefficients in $\hat{\beta}$ reduced the AIC while slightly increasing the deviance and $R^2$ metric of the model, as expected. Note that we still chose the model with higher deviance and $R^2$ metric, because our model selection criterion is the AIC. A low AIC is desirable in our setting because we want to interpret the model at the end, hence we must strike a good balance between maximizing the likelihood and keeping the number of parameters, $p$, manageable.
 
 \begin{table}[h]
     \centering
@@ -127,8 +142,9 @@ In table \ref{tab:backwards_elimination}, we show the AIC, deviance and the gene
     \caption{Table of model diagnostics for the full model and the reduced model}
     \label{tab:backwards_elimination}
 \end{table}
+In table \ref{tab:backwards_elimination}, we show the AIC, deviance and the generalized $R^2$ metric as defined by \cite{cameron}. The table nicely shows how the removal of the 5 interaction coefficients in $\hat{\beta}$ reduced the AIC while slightly increasing the deviance and $R^2$ metric of the model, as expected. Note that we still chose the model with higher deviance and $R^2$ metric, because our model selection criterion is the AIC. A low AIC is desirable in our setting because we want to interpret the model at the end, hence we must strike a good balance between maximizing the likelihood and keeping the number of parameters, $p$, manageable.
 
-Now that we have the hypothesis that five parameters of the initial $\hat{\beta}$ may be $0$, we can construct a hypothesis test to confirm or disprove it. For this, we refer to section 4.4.3 of the lecture notes and use that, for $r<p$ we have
+Now that we have the hypothesis that five parameters of the initial $\hat{\beta}$ may be $0$, we can construct a hypothesis test to confirm or reject it. For this, we refer to section 4.4.3 of the lecture notes and use that, for $r<p$ we have
 \begin{equation}
 D^{(r)}(y) - D^{(p)}(y) \sim \chi^2_{(p-r)}
 \end{equation}
@@ -137,7 +153,12 @@ Now, the difference in the deviances turns out to be $3.06$, and the difference 
 \section{Assessing model fit}
 The most straightforward way to assess the model fit is to look at the scaled deviance of the model, $D(y)$. When the model is well fit, we expect $D(Y) \sim \chi^2_{(n-p)}$. With $D(y) = 5275, n = 5190$, and $p=9$, we have $\mathbb{P}( \chi^2_{5181} > 5275) = 0.178$. Although this is quite large, we can still accept this model at the $5\%$ acceptance limit. Also note, that for this data we do not expect the $\chi^2$ approximation for $D(y)$ to be perfect, since we have small counts in the Poisson.
 
-One could also look at the standardized deviance and standardized Pearson residuals. However, as discussed in the lectures, those residuals are not expected to be standard normals, although they should have unit variance. We thus compute the standardized deviance residuals with the \texttt{R} command \texttt{rstandard} and find that the variance of those residuals is, in fact, $0.92$. Hence, the variance of the residuals is in the expected range.
+One could also look at the standardized deviance and standardized Pearson residuals. However, as discussed in the lectures, those residuals are not expected to be standard normals, although they should have unit variance. We thus compute the standardized deviance residuals with the \texttt{R} command \texttt{rstandard} and find that the variance of those residuals is, in fact, $0.92$. Hence, the variance of the residuals is in the expected range, albeit is is a little smaller than expected.
+
+Table \ref{tab:estimates} lists the p-values for the model coefficients. We see that the three parameters for the insurance are quite likely to be zero. Nevertheless we choose to include those coefficients, since the number of available variables is quite small. It should be noted though, that the influence of the insurance on a person's doctor visits is small, if not negligible!
+\input{outlier-data.txt}
+
+When computing the Cook's Distance for every sample and comparing it to $8/(n-2p)$, we count 170 outliers. We show the data for the 5 samples with the highest Cook's Distance in table \ref{tab:outlier-data}. It is apparent that some of those outliers did go a lot to the doctor for their young age, but there is nothing that is unreasonable about those samples. We thus decide to keep all outliers in the dataset and move on with the model fitted on all samples.
 
 \section{Model Interpretation}
 
@@ -151,13 +172,13 @@ We list all parameter estimates, their confidence intervals and means ratios in 
 
 \input{../report/estimates.txt}
 
-Looking at the confidence intervals of the estimates, it is striking that the parameters for the indicator that a respondent is female, and the parameter for the indicator that a respondent has free government healthcare due to poverty have the highest standard errors. That may indicate that the data has not a lot of information on the effect of those features.
+Looking at the confidence intervals of the estimates, it is striking that the parameters for the indicator that a respondent is female, and the parameter for the indicator that a respondent has free government healthcare due to poverty have the largest confidence intervals. That may indicate that the data has not a lot of information on the effect of those features.
 
 Coming back to the interpretation of confidence intervals, we can say that, e.g. for $\beta_1$ (the coefficient for the age of male respondents), upon repeating the same sampling from the population, the true parameter $\beta_1$ will be in 95\% of the confidence intervals.
 
-Now, we shall look at the means ratios. If the means ratio for one parameter $\beta_j$ is $M^j$, then an increase of one unit in the variable $x_i^{(j)}$ means the expected number of doctor visits in a two-week period for a sample will be multiplied by  $M^j$. For example, the means ratio for the chronic disease state is $2.045$. This means that the expected number of doctor visits doubles if a respondent has the chronic disease! Similarly, the effect of the different insurances on the number of doctor visits can be nicely explained with the means ratio. Compared to people with normal insurance, the expected number of doctor visits is 10\% higher for privately insured people, 13\% higher for people with free insurance due to veteran status, and 36\% lower for people with free insurance due to poverty. The means ratio also helps interpreting the influence of income on the expected number of doctor visits: An increase in income of ten thousand dollars will reduce the expected number of doctor visits by about 25\%.
+Now, we shall look at the means ratios. If the means ratio for one parameter $\beta_j$ is $M^j$, then an increase of one unit in the variable $x^{(j)}$ means the expected number of doctor visits in a two-week period for a sample will be multiplied by  $M^j$. For example, the means ratio for the chronic disease state is $2.045$. This means that the expected number of doctor visits doubles if a respondent has the chronic disease! Similarly, the effect of the different insurances on the number of doctor visits can be nicely explained with the means ratio. Compared to people with normal insurance, the expected number of doctor visits is 10\% higher for privately insured people, 13\% higher for people with free insurance due to veteran status, and 36\% lower for people with free insurance due to poverty. The means ratio also helps interpreting the influence of income on the expected number of doctor visits: An increase in income of ten thousand dollars will reduce the expected number of doctor visits by about 25\%.
 
-We also see that the means ratio for the age feature is $1.016$ for a male respondent. So, for an increase of 10 years in the respondent's age, the expected number of doctor visits will be multiplied by $1.016^{10} = 1.17$, i.e., it will increase by about 17\%. 
+We also see that the means ratio for the age feature is $1.016$ for a male respondent. So, for an increase of 10 years in a male respondent's age, the expected number of doctor visits will be multiplied by $1.016^{10} = 1.17$, i.e., it will increase by about 17\%. 
 
 \begin{table}[h]
 \centering
@@ -178,19 +199,47 @@ The influence of the age is slightly different for females compared to males. Le
 \end{equation}
 Further, we can get the odds for an age increase of a female respondent:
 \begin{equation}
-M_a = \exp(\beta_a) = \exp(\beta_8 + \beta_1)
+M^a = \exp(\beta_a) = \exp(\beta_8 + \beta_1)
 \end{equation}
 With all of this, we find the numeric values shown in table \ref{tab:femal_age}.
-So, we see that the effect of age is almost negligible for women. For a ten year increase in the age, women are expected to go $1.0048^{10} = 1.05$ times more often to the doctor. Hence, the increase for 10 years is 5\% for women compared to 17\% for men. One could conclude that with increasing age, men's doctors visits is more strongly increasing than women's doctors visits. There can be plenty of reasons for this, but note that men have a lower life expectancy in general, so the process of needing more medical support might start at an earlier age in men compared to women.
+So, we see that the effect of age is almost negligible for women. For a ten year increase in the age, women are expected to go $1.0048^{10} = 1.05$ times more often to the doctor. Hence, the increase for 10 years is 5\% for women compared to 17\% for men. One could conclude that with increasing age, men's doctors visits is more strongly increasing than women's doctors visits.
 
 \section{Estimating the dispersion parameter}
 In the lecture notes, we saw that 
 \begin{equation}
 \widehat{\phi} = \frac{1}{n-p} \sum_{i=1}^n \frac{(y_i- \hat{\mu}_i)^2}{V(\hat{\mu}_i)} = \frac{1}{n-p} \sum_{i=1}^n r_{P;i}^2
 \end{equation}
-Where $r_{P;i}$ is the (non-standardized) Pearson residual for sample $i$. Computing this in \texttt{R} yields an estimate of $\hat{\phi} = 1.992$. However, the real value for $\phi$ is $1$ in the Poisson model. Hence we should question whether the Poisson model, or the canonical link function, was actually a good choice in the first place.  
+Where $r_{P;i}$ is the (non-standardized) Pearson residual for sample $i$. Computing this in \texttt{R} yields an estimate of $\hat{\phi} = 1.992$. However, the real value for $\phi$ is $1$ in the Poisson model. Hence we should question whether the Poisson model, or the canonical link function, was actually a good choice in the first place. The fact that $\phi > 1$ indicates that the variances of our estimates are actually too small and the p-values are too optimistic.
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\newpage
 
 \section{Appendix}
+\subsection{Data Loading and Manipulation Script}
+\begin{minted}[linenos]{R}
+get_eda_data <- function() {
+  df <- read.csv("data/docvis.csv")
+  df <- df %>%
+    mutate(female = replace(female, female == 1, "female")) %>%
+    mutate(female = replace(female, female == 0, "male"))
+  df$female <- factor(df$female, levels = c("male", "female"))
+  names(df)[names(df) == 'female'] <- 'gender'
+  df$lchronic <- as.factor(df$lchronic)
+  df[, "insurance"] <- "normal"
+  df <- within(df, {
+    insurance[df$private == 1] <- "private"
+    insurance[df$freepoor == 1] <- "freepoor"
+    insurance[df$freerepat == 1] <- "freerepat"
+  } )
+
+  df$insurance <- factor(df[, "insurance"],
+                         levels = c("normal", "private", "freepoor", "freerepat"))
+
+  subset(df, select = -c(private, freepoor, freerepat))
+}
+\end{minted}
 \subsection{EDA Script}
 \begin{minted}[linenos]{R}
 setwd("/Users/konrad/code/school/MT/glm-practical")
@@ -200,6 +249,7 @@ library(dplyr)
 library(tidyr)
 library(gridExtra)
 library(knitr)
+library(kableExtra)
 
 options(digits = 3)
 
@@ -257,7 +307,7 @@ ggsave("plots/mean_vs_income_and_age.pdf",
        width = DOUBLE_WIDTH, height = HEIGHT)
 
 # Make a histogram how the insurance influences how often people go
-# mean number of visits for different insurance types
+# Compute mean number of visits for different insurance types
 ins.means <- df %>%
   group_by(insurance) %>%
   summarise(mn = mean(visits))
@@ -321,7 +371,7 @@ ggsave("plots/mean_vs_age_and_chronic.pdf",
 
 ## SECTION 2: CREATING SOME SUMMARY STATISTICS ##
 df.grouped <- df %>%
-  group_by(gender, insurance) %>%
+  group_by(insurance) %>%
   summarise(n = n(),
             "mean age" = mean(age),
             "mean visits" = mean(visits),
@@ -330,8 +380,8 @@ df.grouped <- df %>%
 # Output table to Latex
 latex.table <- kable(df.grouped, "latex",
                      caption = "Descriptive statistics of
-                     the dataset by gender and insurance",
-                     label = "stats_fine")
+                     the dataset by insurance",
+                     label = "stats_fine", position = "h")
 
 fileConn <- file("report/descriptive_stats_fine.txt")
 writeLines(latex.table, fileConn)
@@ -346,12 +396,22 @@ df.grouped <- df %>%
   )
 latex.table <- kable(df.grouped, "latex",
                      caption = "Descriptive statistics of the
-                     dataset by gender only",
-                     label = "stats_coarse")
+                     dataset by gender",
+                     label = "stats_coarse", position = "h")
 
 fileConn <- file("report/descriptive_stats_coarse.txt")
 writeLines(latex.table, fileConn)
 close(fileConn)
+
+summaries <- df %>% summarise(
+  "Min Age" = min(age),
+  "Min Income" = min(income),
+  "Max Age" = max(age),
+  "Max Income" = max(income),
+  "Min Visits" = min(visits),
+  "Max Visits" = max(visits)
+)
+summaries
 \end{minted}
 
 \subsection{Modelling and Interpretation Script}
@@ -361,11 +421,12 @@ library(rsq)
 library(MASS)
 library(dplyr)
 library(knitr)
+library(ggplot2)
 setwd("/Users/konrad/code/school/MT/glm-practical")
 source("helpers.R")
 options(digits = 3)
 
-# SECTION 1: DEFINE HELPER FUNCTION
+## SECTION 1: DEFINE HELPER FUNCTION
 
 print_model_stats <- function(model, name) {
   print("-------------------")
@@ -406,12 +467,43 @@ paste("Probability of xi squared test comparing the models:",
 
 
 ## SECTION 3: ASSESS THE MODEL FIT
-# Conduct the xi squared test for the model
 p.final <- length(m2$coefficients)
 n <- dim(df)[1]
+
+# analyse cooks distance for samples
+max.cook <- 8/(n-2*p.final)
+outliers <- cooks.distance(m2) > max.cook
+paste("Cook's distance found", sum(outliers), "outliers.")
+
+cook.df <- data.frame(cooks.distance(m2)) %>%
+  rename("dist" = "cooks.distance.m2.")
+
+# plot cooks distance for optical inspection
+ggplot(data = cook.df,
+       aes(x = 1:dim(cook.df), y=dist)) + geom_point() +
+  ylab("Cook's Distance") + ylim(0,0.15)
+
+# look at the features of the samples that have high distance
+top.outliers <- head(arrange(cook.df, desc(dist)), 5)
+outlier.data <- merge(df, top.outliers, by=0)
+outlier.data <- outlier.data %>% rename(
+  "Sample No." = "Row.names",
+  "Cook's Distance" = "dist"
+)
+
+# output to Latex
+out <- kable(outlier.data, "latex",
+             caption = "Data for the 5 top outliers",
+             label = "outlier-data", position = "h")
+
+fileConn <- file("report/outlier-data.txt")
+writeLines(out, fileConn)
+close(fileConn)
+
 prob <- 1 - pchisq(m2$deviance, n - p.final)
 paste("Probability of xi squared test for the final model",
             round(prob, 3))
+
 
 # Analyze standardized deviance residuals of the model
 deviance.resids <- rstandard(m2)
@@ -420,7 +512,7 @@ paste("Variance of standardizes deviance residuals",
 
 ## SECTION 4: INTERPRET THE MODEL
 # create a dataframe with the coefficients and the beta numbers
-estimates <- summary(m2)$coefficients[, c(1, 2)]
+estimates <- summary(m2)$coefficients[, c(1, 2, 4)]
 estimates <- data.frame(estimates)
 estimates[, "index"] <- rownames(estimates)
 estimates[, "Coefficient"] <- 0:(dim(estimates)[1] - 1)
@@ -457,7 +549,7 @@ joined <- inner_join(estimates, c_interval, by = "index")
 
 # select relevant columns and rename columns or features for the report
 joined <- joined[, c("index", "Coefficient", "Std..Error",
-                     "Estimate", "CI.Estimate", "M", "CI.M")]
+                     "Estimate", "CI.Estimate", "M", "CI.M", "Pr...z..")]
 
 joined[joined$index == "age", "index"] <- "age (for men)"
 joined[joined$index == "age:genderfemale", "index"] <- "age-female"
@@ -468,17 +560,18 @@ joined <- joined %>% rename(
   "CI \\hat{beta}" = CI.Estimate,
   "MR" = M,
   "CI MR" = CI.M,
-  "\\hat{beta}" = Estimate
+  "\\hat{beta}" = Estimate,
+  "Pr(>|z|)" = "Pr...z.."
 )
 
 joined[joined$Feature == "genderfemale", "Feature"] <- "female"
 joined[joined$Feature == "lchronic1", "Feature"] <- "chronic disease"
 joined[joined$Feature == "insuranceprivate", "Feature"] <-
-  "private insurance"
+  "private insur."
 joined[joined$Feature == "insurancefreepoor", "Feature"] <-
-  "freepoor insurance"
+  "freepoor insur."
 joined[joined$Feature == "insurancefreerepat", "Feature"] <-
-  "freepat insurance"
+  "freepat insur."
 
 # output to Latex
 out <- kable(joined, "latex",
